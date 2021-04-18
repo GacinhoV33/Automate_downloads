@@ -86,7 +86,7 @@ def search_file_by_ext(ext: str, init_path: str, dest_path: str, days, start_tim
                 if not os.path.exists(dest_path + "/" + lect_name + "/" + ext[1:] + "_files/" + str(modification_time.date())):
                     os.makedirs(dest_path + "/" + lect_name + "/" + ext[1:] + "_files/" + str(modification_time.date()))
                 while flag:
-                    if filename in os.listdir(dest_path + "/" + lect_name + "/" + ext[1:] + "_files/" + str(modification_time.date())):
+                    if new_filename in os.listdir(dest_path + "/" + lect_name + "/" + ext[1:] + "_files/" + str(modification_time.date())):
                         new_filename = "(1)" + new_filename
                     else:
                         flag = False
