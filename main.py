@@ -6,6 +6,9 @@ import json
 import time
 import datetime
 import pathlib
+import xlwt
+import xlrd
+
 
 #
 # class MyHandler(FileSystemEventHandler):
@@ -60,7 +63,41 @@ def sort_files(initial_path: str, flag=True):
             os.rename(os.path.join(initial_path, filename), os.path.join(initial_path, "txt_files", str(modification_time), new_name))
 
 
-sort_files("C:/Users/gacek/Desktop/Projekty IT/Python")
+def segregating_lectures(path_initial: str):
+    lectures_data = xlrd.open_workbook("Data.xls")
+    arkusz_lectures = lectures_data.sheet_by_name(lectures_data.sheet_names()[0])
+    lectures_names = list()
+    start_time = list()
+    end_time = list()
+    days = list()
+    n_rows = arkusz_lectures.nrows
+
+    for i in range(1, n_rows):
+        # Lectures
+        lectures_names.append(arkusz_lectures.row_values(i)[0])
+
+        #Time start
+        data_values = xlrd.xldate_as_datetime(float(arkusz_lectures.row_values(i)[1]), lectures_data.datemode)
+        start_time.append(data_values.time())
+
+        # Time end
+        data_values = xlrd.xldate_as_datetime(float(arkusz_lectures.row_values(i)[2]), lectures_data.datemode)
+        end_time.append(data_values.time())
+
+        #Days
+        # Lectures
+        days.append(arkusz_lectures.row_values(i)[3])
+
+    print(lectures_names)
+
+
+def change_time(time):
+    return 0
+
+
+
+# sort_files("C:/Users/gacek/Desktop/Projekty IT/Python")
+segregating_lectures("dlabeki")
 #
 
 # def create_name_folders():
