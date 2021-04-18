@@ -8,7 +8,8 @@ import datetime
 import pathlib
 import xlwt
 import xlrd
-
+from typing import List
+from shutil import copy
 
 #
 # class MyHandler(FileSystemEventHandler):
@@ -49,7 +50,8 @@ def sort_files(initial_path: str, flag=True):
     # print([f for f in os.listdir(initial_path)])
     for filename in [f for f in os.listdir(initial_path) if "." in f]:
         if ".txt" in filename:
-            modification_time = datetime.datetime.fromtimestamp(pathlib.Path(initial_path + "/" + filename).stat().st_ctime).date()
+            modification_time = datetime.datetime.fromtimestamp(
+                pathlib.Path(initial_path + "/" + filename).stat().st_ctime).date()
 
             new_name = filename
             while flag:
@@ -60,10 +62,38 @@ def sort_files(initial_path: str, flag=True):
             if not os.path.exists(initial_path + "/txt_files/" + str(modification_time)):
                 os.makedirs(initial_path + "/txt_files/" + str(modification_time))
             # os.rename(initial_path + "/" + filename, initial_path + "/txt_files/" + str(modification_time) + "/" +new_name)
-            os.rename(os.path.join(initial_path, filename), os.path.join(initial_path, "txt_files", str(modification_time), new_name))
+            os.rename(os.path.join(initial_path, filename),
+                      os.path.join(initial_path, "txt_files", str(modification_time), new_name))
 
 
-def segregating_lectures(path_initial: str):
+def search_file_by_ext(ext: str, init_path: str, dest_path: str, days, start_time, end_time, lecture_names, flag=True):
+    for filename in [f for f in os.listdir(init_path) if "." in f]:  # find better solution for "."
+        if ext in filename:
+            modification_time = datetime.datetime.fromtimestamp(
+                pathlib.Path(init_path + "/" + filename).stat().st_ctime)
+            file_day = modification_time.date().weekday()
+            file_time = modification_time.time()
+            lect_name = None
+            for day in days:
+                if file_day == day:
+                    for s_time, e_time, name in zip(start_time, end_time, lecture_names):
+                        # print("s_time: ", s_time, "file_time", file_time, "end_time:", end_time)
+                        if s_time < file_time < e_time:
+                            lect_name = name
+
+            new_filename = filename
+            if lect_name:
+                if not os.path.exists(dest_path + "/" + lect_name + "/" + ext[1:] + "_files/" + str(modification_time.date())):
+                    os.makedirs(dest_path + "/" + lect_name + "/" + ext[1:] + "_files/" + str(modification_time.date()))
+                while flag:
+                    if filename in os.listdir(dest_path + "/" + lect_name + "/" + ext[1:] + "_files/" + str(modification_time.date())):
+                        new_filename = "(1)" + new_filename
+                    else:
+                        flag = False
+                copy(init_path + "/" + filename, dest_path + "/" + lect_name + "/" + ext[1:] + "_files/" + str(modification_time.date()))
+
+
+def segregating_lectures():
     lectures_data = xlrd.open_workbook("Data.xls")
     arkusz_lectures = lectures_data.sheet_by_name(lectures_data.sheet_names()[0])
     lectures_names = list()
@@ -71,12 +101,15 @@ def segregating_lectures(path_initial: str):
     end_time = list()
     days = list()
     n_rows = arkusz_lectures.nrows
+    init_path1 = arkusz_lectures.row_values(1)[5]
+    init_path2 = arkusz_lectures.row_values(2)[5]
+    dest_path = arkusz_lectures.row_values(1)[6]
 
     for i in range(1, n_rows):
         # Lectures
         lectures_names.append(arkusz_lectures.row_values(i)[0])
 
-        #Time start
+        # Time start
         data_values = xlrd.xldate_as_datetime(float(arkusz_lectures.row_values(i)[1]), lectures_data.datemode)
         start_time.append(data_values.time())
 
@@ -84,20 +117,19 @@ def segregating_lectures(path_initial: str):
         data_values = xlrd.xldate_as_datetime(float(arkusz_lectures.row_values(i)[2]), lectures_data.datemode)
         end_time.append(data_values.time())
 
-        #Days
+        # Days
         # Lectures
         days.append(arkusz_lectures.row_values(i)[3])
 
-    print(lectures_names)
-
-
-def change_time(time):
-    return 0
+    ext_list = [".txt", ".png", ".jpg", ".doc", ".pdf"]
+    for ext in ext_list:
+        search_file_by_ext(ext, init_path1, dest_path, days, start_time, end_time, lectures_names, n_rows)
+        search_file_by_ext(ext, init_path2, dest_path, days, start_time, end_time, lectures_names, n_rows)
 
 
 
 # sort_files("C:/Users/gacek/Desktop/Projekty IT/Python")
-segregating_lectures("dlabeki")
+segregating_lectures()
 #
 
 # def create_name_folders():
@@ -112,8 +144,7 @@ segregating_lectures("dlabeki")
 # sort_files("C:/Users/gacek/Downloads/txt_files")
 
 
-
-#for downloads
+# for downloads
 # folder_name2 = "C:/Users/gacek/Downloads"
 # folder_destination_txt = "
 # folder_destination_png = "C:/Users/gacek/Downloads/images_files"
@@ -123,10 +154,6 @@ segregating_lectures("dlabeki")
 # observer = watchdog.observers.Observer()
 # observer.schedule(event_handler, folder_name2, recursive=True)
 # observer.start()
-
-
-
-
 
 
 # # some folder from computer
